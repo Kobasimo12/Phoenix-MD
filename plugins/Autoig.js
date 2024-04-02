@@ -1,31 +1,17 @@
------------------------------------------------------------------------
-Module_Exports({
-        kingcmd: "tomp3",
-        shortcut:['mp3','toaudio'],
-        infocmd: "changes type to audio.",
-        kingclass: "converter",
-        use: 'reply to any Video',
-        kingpath: __filename
-    },
-   async(sigma, citel, text) => {
-        if (!citel.quoted) return citel.reply(`_Reply to Any Video_`);
-        let mime = citel.quoted.mtype
-if (mime =="audioMessage" || mime =="videoMessage")
-{
-        let media = await sigma.downloadAndSaveMediaMessage(citel.quoted);
-         const { toAudio } = require('../lib');
-         let buffer = fs.readFileSync(media);
-        let audio = await toAudio(buffer);
-        sigma.sendMessage(citel.chat, { audio: audio, mimetype: 'audio/mpeg' }, { quoted: citel });
-     
- 
- fs.unlink(media, (err) => {
-  if (err) { return console.error('File Not Deleted from From TOAUDIO AT : ' , media,'\n while Error : ' , err);  }
-  else return console.log('File deleted successfully in TOAUDIO MP3 at : ' , media);
-});
-
-}
- else return citel.send ("*Please, Reply To A video Message*")
-    }
-)
-     //---------------------------------------------------------------------------
+inrl({
+    pattern: 'mp3 ?(.*)',
+    desc: lang.CONVERTER.MP3_DESC,
+    type: "converter",
+    fromMe: mode
+}, (async (message) => {
+    if (!message.reply_message.audio && !message.reply_message.video) return message.reply(lang.BASE.NEED.format("video message"));
+    const opt = {
+                title: config.AUDIO_DATA.split(/[|,;]/)[0] || config.AUDIO_DATA,
+                body: config.AUDIO_DATA.split(/[|,;]/)[1],
+                image: config.AUDIO_DATA.split(/[|,;]/)[2]
+            }
+    const AudioMeta = await AudioMetaData(await toAudio(await message.reply_message.download()), opt);
+    return await message.send(AudioMeta,{
+        mimetype: 'audio/mpeg'
+    },'audio')
+}));
